@@ -6,7 +6,7 @@ from pars import KolesaKz, get_marks, get_regions, get_models, bodywork, KKP
 from time import sleep
 from multiprocessing import Process
 
-bot = TeleBot('')
+bot = TeleBot('1198609069:AAFSfedIfR22MxNL63bprOqnxhPIYS7hwHo')
 
 
 

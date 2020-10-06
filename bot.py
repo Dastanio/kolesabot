@@ -339,5 +339,5 @@ def schedule(wait_for):
 		db.close()
 
 if __name__==  '__main__':
-	Process(target=schedule, args=(10, )).start()
+	Process(target=schedule, args=(250, )).start()
 	bot.polling(none_stop=True)

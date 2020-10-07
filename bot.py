@@ -111,7 +111,7 @@ def handler_callback_query(query):
 		bot.edit_message_text(chat_id=query.from_user.id, message_id=query.message.message_id, text="Марка:", reply_markup=keyboard)
 	elif query.data.startswith('8.'):
 		db = SQLighter('db.db')
-		subscriber = db.get_subscriber(message.from_user.id)
+		subscriber = db.get_subscriber(query.from_user.id)
 		db.close()
 
 		if eval(subscriber[0][2])[query.data.split('8.')[1]]['car'] != None:

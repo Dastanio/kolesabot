@@ -6,9 +6,13 @@ from pars import KolesaKz, get_marks, get_regions, get_models, bodywork, KKP
 from time import sleep
 from multiprocessing import Process
 
-bot = TeleBot('1198609069:AAFSfedIfR22MxNL63bprOqnxhPIYS7hwHo')
+bot = TeleBot('1315224989:AAHZRgQNITGn1IZSF4i22KW_jiLhOEDhYXI')
 
+db = SQLighter()
 
+db.create_table()
+
+db.close()
 
 @bot.message_handler(commands= ['start'])
 def main(message):
@@ -27,19 +31,17 @@ def main(message):
 
 @bot.message_handler(commands=['subscribe'])
 def subscribe(message):
-	db = SQLighter('db.db')
-
+	db = SQLighter()
 	if not db.subscriber_exists(message.from_user.id):
 		db.add_subscriber(message.from_user.id)
 	else:
 		db.update_subscription(message.from_user.id, True)
-
 	bot.send_message(message.chat.id, "Вы успешно подписались на рассылку!\nПо умолчанию вам будут приходить все уведомление машин с сайта. =)")
 	db.close()
 
 @bot.message_handler(commands=['unsubscribe'])
 def unsubscribe(message):
-	db = SQLighter('db.db')
+	db = SQLighter()
 
 	if not db.subscriber_exists(message.from_user.id):
 		db.add_subscriber(message.from_user.id, False)
@@ -52,7 +54,7 @@ def unsubscribe(message):
 
 @bot.message_handler(commands=['edit_filters'])
 def filters(message):
-	db = SQLighter('db.db')
+	db = SQLighter()
 
 	if message.chat.id in [i[0] for i in db.get_subscriptions()]:
 		keyboard = types.InlineKeyboardMarkup()
@@ -67,7 +69,7 @@ def filters(message):
 	db.close()
 
 def save_filter(id, text, filter, car):
-	db = SQLighter('db.db')
+	db = SQLighter()
 
 	filters = eval(db.get_subscriber(id)[0][2])
 
@@ -110,7 +112,7 @@ def handler_callback_query(query):
 
 		bot.edit_message_text(chat_id=query.from_user.id, message_id=query.message.message_id, text="Марка:", reply_markup=keyboard)
 	elif query.data.startswith('8.'):
-		db = SQLighter('db.db')
+		db = SQLighter()
 		subscriber = db.get_subscriber(query.from_user.id)
 		db.close()
 
@@ -155,7 +157,7 @@ def handler_callback_query(query):
 		bot.edit_message_text(chat_id=query.from_user.id, message_id=query.message.message_id, text="Введите объем до (неважно):")
 		bot.register_next_step_handler(query.message, lambda message: save_filter(message.chat.id, message.text, 'auto-car-volume[to]', query.data.split('11.')[1]))
 	elif query.data.startswith('13.'):
-		db = SQLighter('db.db')
+		db = SQLighter()
 
 		db.reset_filters(query.from_user.id, query.data.split('13.')[1])
 		bot.edit_message_text(chat_id=query.from_user.id, message_id=query.message.message_id, text="Фильтры сброшены.")
@@ -175,7 +177,7 @@ def handler_callback_query(query):
 		elif query.data.startswith('18.'):
 			name = 'auto-car-transm'
 
-		db = SQLighter('db.db')
+		db = SQLighter()
 		filters = eval(db.get_subscriber(query.from_user.id)[0][2])
 
 		if data == '0':
@@ -198,13 +200,13 @@ def handler_callback_query(query):
 
 		bot.edit_message_text(chat_id=query.from_user.id, message_id=query.message.message_id, text='Выберите желаемый фильтр:', reply_markup=filters_keyboard)
 	elif query.data.startswith('20.'):
-		db = SQLighter('db.db')
+		db = SQLighter()
 		db.delete_car(query.from_user.id, query.data.split('20.')[1])
 		db.close()
 
 		bot.edit_message_text(chat_id=query.from_user.id, message_id=query.message.message_id, text="Комплект фильтра удален.")
 	elif query.data.startswith('21.'):
-		db = SQLighter('db.db')
+		db = SQLighter()
 		text = ''
 		filters = eval(db.get_subscriber(query.from_user.id)[0][2])[query.data.split('21.')[1]]
 
@@ -274,7 +276,7 @@ def handler_callback_query(query):
 	bot.answer_callback_query(query.id)
 
 def add_car(message):
-	db = SQLighter('db.db')
+	db = SQLighter()
 	db.add_car(message.chat.id, message.text)
 	db.close()
 
@@ -282,7 +284,7 @@ def add_car(message):
 
 @bot.message_handler(commands=['add_car'])
 def add_car_command(message):
-	db = SQLighter('db.db')
+	db = SQLighter()
 
 	if message.chat.id in [i[0] for i in db.get_subscriptions()]:
 		bot.send_message(message.chat.id, 'Введите название комплекта фильтра:')
@@ -294,7 +296,7 @@ def add_car_command(message):
 
 @bot.message_handler(commands=['delete_car'])
 def delete_car_command(message):
-	db = SQLighter('db.db')
+	db = SQLighter()
 
 	if message.chat.id in [i[0] for i in db.get_subscriptions()]:
 		keyboard = types.InlineKeyboardMarkup()
@@ -310,7 +312,7 @@ def delete_car_command(message):
 
 @bot.message_handler(commands=['show_filters'])
 def show_filters(message):
-	db = SQLighter('db.db')
+	db = SQLighter()
 
 	if message.chat.id in [i[0] for i in db.get_subscriptions()]:
 		keyboard = types.InlineKeyboardMarkup()
@@ -328,16 +330,18 @@ def schedule(wait_for):
 	while True:
 		sleep(wait_for)
 
-		db = SQLighter('db.db')
+		db = SQLighter()
 
 		for i in db.get_subscriptions():
 			for j, k in eval(i[2]).items():
 				sg = KolesaKz('users/'+str(i[0])+'.txt', filters=k)
 				for l in sg.new_cars():
-					bot.send_message(i[0], 'Новая объявление в %s: %s' % (j, l), disable_notification=True)
+					bot.send_message(i[0], 'Новая объявление в %s: %s' % (j, l), disable_notification=False)
 
 		db.close()
 
 if __name__==  '__main__':
-	Process(target=schedule, args=(250, )).start()
+	Process(target=schedule, args=(200, )).start()
 	bot.polling(none_stop=True)
+			
+	
